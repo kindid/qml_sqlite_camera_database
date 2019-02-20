@@ -1,0 +1,14 @@
+///////////////////////////////////////////////////////////////////////////////
+/// (C) kindid 2018
+///////////////////////////////////////////////////////////////////////////////
+
+#ifndef HERE_H
+#define HERE_H
+
+#include <QDebug>
+
+#ifndef here_disable
+#define here (qDebug().nospace().noquote() << "file:///" << __FILE__ << ":" << __LINE__ << ":" << __FUNCTION__ << ":").space()
+#endif
+
+#endif
