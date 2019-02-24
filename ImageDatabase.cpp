@@ -16,6 +16,8 @@
 // only visible as an "image" thingy...
 // lots of stuff to do...
 
+// todo; add a "to_url" somewhere
+
 void dumpQueryError(const QSqlQuery & query)
 {
     here << query.lastError().text();
@@ -34,7 +36,7 @@ QImage ImageDatabaseImageProvider::requestImage(const QString &id, QSize *size, 
 {
     // interesting - document this... the id passed in here is truncated AFTER the user_images bit
     //
-    here << '[' << id << ']' << requestedSize << size << *size;
+    //    here << '[' << id << ']' << requestedSize << size << *size;
 
     int split = id.indexOf('/');
     if (split > 0) {
@@ -42,9 +44,10 @@ QImage ImageDatabaseImageProvider::requestImage(const QString &id, QSize *size, 
         here << user_key;
         return idb->getImage(user_key);
     } else {
+        // yeah, no cache key is entirely possible
         // return some sort of error or default image
     }
-//    idb->getImage(id);
+    //    idb->getImage(id);
 
     QSize sizeQ;
     if (requestedSize.isEmpty()) {
@@ -81,11 +84,11 @@ ImageDatabase::ImageDatabase(QObject * parent)
     database = QSqlDatabase::addDatabase("QSQLITE");
 
     QString schema =
-        "CREATE TABLE IF NOT EXISTS images ("
+            "CREATE TABLE IF NOT EXISTS images ("
             "key string primary key, "
             "cachekey string, "
             "image blob"
-        ")";
+            ")";
 
     QDir dirAppData(QStandardPaths::writableLocation(QStandardPaths::AppDataLocation));
     if (!dirAppData.exists()) {
@@ -110,9 +113,9 @@ ImageDatabase::ImageDatabase(QObject * parent)
     if (query.exec(schema)) {
         here << query.executedQuery();
         _valid = true;
-//        setTable("images)";
-//        here << "success";
-//        return true;
+        //        setTable("images)";
+        //        here << "success";
+        //        return true;
     } else {
         _valid = false;
         //here << tableName();
@@ -130,7 +133,7 @@ ImageDatabase::ImageDatabase(QObject * parent)
     here << insertImage("first_key", image1);
     here << insertImage("seconds_key", image2);
     here << insertImage("third_key", image3);
-//    insertImage("fourth_key", image4);
+    //    insertImage("fourth_key", image4);
 
     here << updateImage("first_key", image3);
 
@@ -142,13 +145,13 @@ ImageDatabase::ImageDatabase(QObject * parent)
         QFile file("/Users/kuiash/Downloads/blah.jpg");
         if (file.open(QIODevice::WriteOnly | QIODevice::Truncate)) {
             file.write(outByteArray);
-//            outPixmap.loadFromData(outByteArray );
+            //            outPixmap.loadFromData(outByteArray );
         }
-//        QPixmap outPixmap = QPixmap();
-//        outPixmap.loadFromData( outByteArray );
-//        db.close();
+        //        QPixmap outPixmap = QPixmap();
+        //        outPixmap.loadFromData( outByteArray );
+        //        db.close();
     }
-//    return false;
+    //    return false;
 }
 
 bool ImageDatabase::valid() const
@@ -164,17 +167,17 @@ QString ImageDatabase::insertImage(const QString & key, const QImage & image)
     image.save(&inBuffer, "JPG");
 
     QSqlQuery query(database);
-    query.prepare( "INSERT INTO images (key, cacheKey, image) VALUES (:key, 0, :image)" );
+    query.prepare( "INSERT INTO images (key, cacheKey, image) VALUES (:key, 1, :image)" );
     query.bindValue(":key", key);
     query.bindValue(":image", inByteArray);
     if (query.exec()) {
         here << "YOU DID IT!!!";
-        return QString("images://users/%1/%2").arg(key).arg(0);
+        return QString("images://%1/%2/%3").arg(tableName).arg(key).arg(0);
     } else {
         dumpQueryError(query);
         return QString();
     }
-//    return "hi";
+    //    return "hi";
 }
 
 
@@ -198,14 +201,14 @@ QString ImageDatabase::updateImage(const QString & key, const QImage & image)
             here << "SELECTED";
             query.first();
             int cacheKey = query.value(0).toInt();
-            return QString("image://users/%1/%2").arg(key).arg(cacheKey);
+            return QString("image://%1/%2/%3").arg(tableName).arg(key).arg(cacheKey);
         } else  {
             dumpQueryError(query);
         }
     } else {
         dumpQueryError(query);
     }
-    return "image://users/?/?";
+    return QString("image://%1//").arg(tableName);
 }
 
 QImage ImageDatabase::getImage(const QString & key)
@@ -226,6 +229,23 @@ QImage ImageDatabase::getImage(const QString & key)
         dumpQueryError(query);
     }
     return out;
+}
+
+QString ImageDatabase::getUrl(const QString & key) const
+{
+    QSqlQuery query(database);
+    query.prepare("SELECT cacheKey FROM images WHERE key=:key");
+    query.bindValue(":key", key);
+    if (query.exec()) {
+        if (query.size()) {
+            query.first();
+            int cacheKey = query.value(0).toInt();
+            return QString("image://%1/%2/%3").arg(tableName).arg(key).arg(cacheKey);
+        } else {
+            return QString("image://%1/%2/0").arg(tableName).arg(key);
+        }
+    }
+    return QString("image://%1//").arg(tableName);
 }
 
 

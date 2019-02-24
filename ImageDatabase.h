@@ -32,6 +32,7 @@ public slots:
     QString insertImage(const QString & key, const QImage & image);
     QString updateImage(const QString & key, const QImage & image);
     QString getTableName() const { return tableName; }
+    QString getUrl(const QString & key) const;
 public:
     bool valid() const;
 

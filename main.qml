@@ -1,4 +1,5 @@
 import QtQuick 2.12
+import QtQuick.Controls 2.4
 import QtQuick.Window 2.12
 import QtQuick.LocalStorage 2.12
 import QtMultimedia 5.8
@@ -8,9 +9,24 @@ Window {
     width: 800
     height: 600
     title: qsTr("qml_sqlite_camera_database")
-    Item {
+    TextInput {
         x: 0
         y: 0
+        width: parent.width
+        height: parent.height
+        text: "hi there"
+        onTextChanged: {
+            // when this changes i want to get the latest version of this image - this is HARD
+            // because you don't know the cache key - answer, look it up.
+            print("text = ", text);
+            print("url  = ", user_images.getUrl(text))
+            image_thing.source = user_images.getUrl(text)
+        }
+    }
+
+    Item {
+        x: 0
+        y: 20
         width: 400
         height: 300
         Camera {
@@ -38,7 +54,7 @@ Window {
     // add a text edit here used to get/set as appropriate
     Image {
         x:400
-        y:0
+        y:20
         width: 400
         height: 300
         id: photoPreview

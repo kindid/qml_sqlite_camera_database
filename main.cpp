@@ -10,7 +10,7 @@ int main(int argc, char *argv[])
 
     QGuiApplication app(argc, argv);
 
-    ImageDatabase * idb = new ImageDatabase();
+    ImageDatabase * idb = new ImageDatabase(&app);  // child or app - will be cleaned up on exit
     QQmlApplicationEngine engine;
     qDebug() << engine.offlineStoragePath();
     engine.addImageProvider(QLatin1String("user_images"), idb->getImageProvider());
